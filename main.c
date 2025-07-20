@@ -72,9 +72,7 @@ void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_
         const int y = a_y + t * dy;
         const size_t buffer_index = y * WIDTH + x;
         fprintf(stderr, "x: %d\ty: %d\tbuffer_index: %llu\n", x, y, buffer_index);
-        if (buffer_index >=  WIDTH * HEIGHT) {
-            fprintf(stderr, "MAX BUFFER INDEX REACHED!\n");
-        }
+        assert (buffer_index < WIDTH * HEIGHT);
         buffer[buffer_index].r = r;
         buffer[buffer_index].g = g;
         buffer[buffer_index].b = b;
@@ -85,10 +83,11 @@ int main(void) {
     
     if (!initialize()) return -1;
     
-    draw_line(pixels, 0, 0, 799, 599, 255, 0, 0);
-    draw_line(pixels, 50, 100, 300, 300, 0, 255, 255);
-    draw_line(pixels, 300, 300, 399, 399, 0, 255, 0);
-    draw_line(pixels, 100, 100, 399, 399, 0, 0, 255);
+    draw_line(pixels, 50, 50, 300, 400, 255, 0, 0);
+    draw_line(pixels, 50, 50, 300, 400, 0, 255, 255);
+    draw_line(pixels, 50, 50, 500, 300, 0, 255, 0);
+    // draw_line(pixels, 300, 400, 500, 300, 0, 0, 255);
+    draw_line(pixels, 500, 300, 300, 400, 0, 0, 255);
     
     if (!write_image("image.ppm", pixels, WIDTH, HEIGHT)) return -1;
     
