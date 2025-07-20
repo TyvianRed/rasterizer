@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -56,18 +57,24 @@ bool write_image(const char* name, const color_t* const buffer, const unsigned i
 
 void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_t r, uint8_t g, uint8_t b) {
     
+    assert(a_x >= 0 && a_x < WIDTH);
+    assert(b_x >= 0 && b_x < WIDTH);
+    assert(a_y >= 0 && a_y < HEIGHT);
+    assert(b_y >= 0 && b_y < HEIGHT);
+    
     // x(t) = a_x + t * (b_x - a_x);
     // y(t) = a_y + t * (b_y - a_y);
     const int dx = b_x - a_x, dy = b_y - a_y;
-    
-    fprintf(stderr, "b_x: %d\tb_y: %d\n", b_x, b_y);
+    fprintf(stderr, "dx: %d\tdy: %d\n", dx, dy);
     
     for (double t = 0; t <= 1; t += .001) {
         const int x = a_x + t * dx;
-        const int y = b_y + t * dy;
+        const int y = a_y + t * dy;
         const size_t buffer_index = y * WIDTH + x;
-        // fprintf(stderr, "x: %d\ty: %d\tdx: %d\tdy: %d\n", x, y, dx, dy);
-        fprintf(stderr, "t: %f\tx: %d\ty: %d\tbuffer_index: %llu\n", t, x, y, buffer_index);
+        fprintf(stderr, "x: %d\ty: %d\tbuffer_index: %llu\n", x, y, buffer_index);
+        if (buffer_index >=  WIDTH * HEIGHT) {
+            fprintf(stderr, "MAX BUFFER INDEX REACHED!\n");
+        }
         buffer[buffer_index].r = r;
         buffer[buffer_index].g = g;
         buffer[buffer_index].b = b;
@@ -78,7 +85,10 @@ int main(void) {
     
     if (!initialize()) return -1;
     
-    draw_line(pixels, 100, 100, 300, 300, 255, 0, 0);
+    draw_line(pixels, 0, 0, 799, 599, 255, 0, 0);
+    draw_line(pixels, 50, 100, 300, 300, 0, 255, 255);
+    draw_line(pixels, 300, 300, 399, 399, 0, 255, 0);
+    draw_line(pixels, 100, 100, 399, 399, 0, 0, 255);
     
     if (!write_image("image.ppm", pixels, WIDTH, HEIGHT)) return -1;
     
