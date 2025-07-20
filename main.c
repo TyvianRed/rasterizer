@@ -181,12 +181,12 @@ void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_
     }
 }
 
-void perform_stress_test(color_t* const buffer) {
+void perform_stress_test(color_t* const buffer, size_t count) {
     time_t current_time;
     time(&current_time);
     srand((unsigned int)current_time);
     fprintf(stderr, "Performing stress test on %p...\n", buffer);
-    for (int test = 0; test < 1000; ++test) {
+    for (size_t test = 0; test < count; ++test) {
         // fprintf(stderr, "Performing test #%d...\n", test);
         const int a_y = rand() % (HEIGHT - 1);
         const int b_y = rand() % (HEIGHT - 1);
@@ -204,15 +204,16 @@ void perform_stress_test(color_t* const buffer) {
 int main(void) {
     
     if (!initialize()) return -1;
-    
+    /*
     // Triangle
     draw_line(pixels, 50, 50, 300, 400, 255, 0, 0);
     draw_line(pixels, 50, 50, 300, 400, 0, 255, 255);
     draw_line(pixels, 50, 50, 500, 300, 0, 255, 0);
     draw_line(pixels, 300, 400, 500, 300, 0, 0, 255);
     draw_line(pixels, 500, 300, 300, 400, 0, 0, 255);
+    */
     
-    // perform_stress_test(pixels);
+    perform_stress_test(pixels, 593);
     
     if (!write_image("image.ppm", pixels, WIDTH, HEIGHT)) return -1;
     
