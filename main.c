@@ -118,8 +118,8 @@ void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_
                 // Performing test #15095...
                 // (a_x, a_y) = (151, 302) (b_x, b_y) = (402, 0)
                 for (double y = b_y; y <= a_y; y += 0.001) {
-                    double t = (y - a_y) / (b_y - a_y);
-                    int x = a_x + t * (b_x - a_x); // t < 0
+                    double t = (y - b_y) / (a_y - b_y);
+                    int x = a_x + t * (a_x - b_x); // t < 0
                     // fprintf(stderr, "x = %d\tt = %f\n", x, t);
                     assert((int)y * WIDTH + x < HEIGHT * WIDTH);
                     
@@ -205,16 +205,14 @@ int main(void) {
     
     if (!initialize()) return -1;
     
-    /*
     // Triangle
     draw_line(pixels, 50, 50, 300, 400, 255, 0, 0);
     draw_line(pixels, 50, 50, 300, 400, 0, 255, 255);
     draw_line(pixels, 50, 50, 500, 300, 0, 255, 0);
     draw_line(pixels, 300, 400, 500, 300, 0, 0, 255);
     draw_line(pixels, 500, 300, 300, 400, 0, 0, 255);
-    */
     
-    perform_stress_test(pixels);
+    // perform_stress_test(pixels);
     
     if (!write_image("image.ppm", pixels, WIDTH, HEIGHT)) return -1;
     
