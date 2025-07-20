@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <time.h>
 
 enum {
     WIDTH = 800,
@@ -69,26 +70,32 @@ void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_
     assert(b_y >= 0 && b_y < HEIGHT);
     
     if (abs(a_y - b_y) > abs(a_x - b_x)) {
-        // it goes down.
-        
         if (a_y < b_y)
         {
             if (a_x < b_x) {
                 for (double y = a_y; y <= b_y; y += 0.001) {
                     double t = (y - a_y) / (b_y - a_y);
                     int x = a_x + t * (b_x - a_x);
+                    
+                    assert((int)y * WIDTH + x < HEIGHT * WIDTH);
+                    
+                    
                     buffer[(int)y * WIDTH + x].r = r;
                     buffer[(int)y * WIDTH + x].g = g;
                     buffer[(int)y * WIDTH + x].b = b;
                 }
             }
             else if (a_x > b_x) {
-                // the case that matters
                 swap_int(&a_x, &b_x);
                 swap_int(&a_y, &b_y);
                 for (double y = a_y; y <= b_y; y += 0.001) {
                     double t = (y - a_y) / (b_y - a_y);
                     int x = a_x + t * (b_x - a_x);
+                    
+                   
+                    assert((int)y * WIDTH + x < HEIGHT * WIDTH);
+                    
+                    
                     buffer[(int)y * WIDTH + x].r = r;
                     buffer[(int)y * WIDTH + x].g = g;
                     buffer[(int)y * WIDTH + x].b = b;
@@ -97,6 +104,9 @@ void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_
             else if (a_x == b_x) {
                 const int x = a_x;
                 for (double y = a_y; y <= b_y; y += 0.001) {
+                    assert((int)y * WIDTH + x < HEIGHT * WIDTH);
+                    
+                    
                     buffer[(int)y * WIDTH + x].r = r;
                     buffer[(int)y * WIDTH + x].g = g;
                     buffer[(int)y * WIDTH + x].b = b;
@@ -104,9 +114,15 @@ void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_
             }
         } else if (a_y > b_y) {
             if (a_x < b_x) {
+                // this case is wrong.
+                // Performing test #15095...
+                // (a_x, a_y) = (151, 302) (b_x, b_y) = (402, 0)
                 for (double y = b_y; y <= a_y; y += 0.001) {
-                    double t = (y - a_y) / (a_y - b_y);
+                    double t = (y - a_y) / (b_y - a_y);
                     int x = a_x + t * (b_x - a_x); // t < 0
+                    // fprintf(stderr, "x = %d\tt = %f\n", x, t);
+                    assert((int)y * WIDTH + x < HEIGHT * WIDTH);
+                    
                     buffer[(int)y * WIDTH + x].r = r;
                     buffer[(int)y * WIDTH + x].g = g;
                     buffer[(int)y * WIDTH + x].b = b;
@@ -117,7 +133,9 @@ void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_
                 swap_int(&a_y, &b_y);
                 for (double y = b_y; y <= a_y; y += 0.001) {
                     double t = (y - a_y) / (a_y - b_y);
-                    int x = a_x + t * (b_x - a_x); // t < 0
+                    int x = a_x + t * (b_x - a_x);
+                    assert((int)y * WIDTH + x < HEIGHT * WIDTH);
+                    
                     buffer[(int)y * WIDTH + x].r = r;
                     buffer[(int)y * WIDTH + x].g = g;
                     buffer[(int)y * WIDTH + x].b = b;
@@ -126,6 +144,7 @@ void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_
             else if (a_x == b_x) {
                 const int x = a_x;
                 for (double y = b_y; y <= a_y; y += 0.001) {
+                    assert((int)y * WIDTH + x < HEIGHT * WIDTH);
                     buffer[(int)y * WIDTH + x].r = r;
                     buffer[(int)y * WIDTH + x].g = g;
                     buffer[(int)y * WIDTH + x].b = b;
@@ -146,7 +165,7 @@ void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_
     // t(x) = (x - a_x) / (b_x - a_x);
     int dx = b_x - a_x;
     int dy = b_y - a_y;
-    fprintf(stderr, "dx: %d\tdy: %d\n", dx, dy);
+    // fprintf(stderr, "dx: %d\tdy: %d\n", dx, dy);
 
     for (double x = a_x; x <= b_x; x += .001) {
         const double t = (x - a_x) / (double)dx;
@@ -162,26 +181,40 @@ void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_
     }
 }
 
+void perform_stress_test(color_t* const buffer) {
+    time_t current_time;
+    time(&current_time);
+    srand((unsigned int)current_time);
+    fprintf(stderr, "Performing stress test on %p...\n", buffer);
+    for (int test = 0; test < 1000; ++test) {
+        // fprintf(stderr, "Performing test #%d...\n", test);
+        const int a_y = rand() % (HEIGHT - 1);
+        const int b_y = rand() % (HEIGHT - 1);
+        const int a_x = rand() % (WIDTH - 1);
+        const int b_x = rand() % (WIDTH - 1);
+        const uint8_t r = rand() % 255;
+        const uint8_t g = rand() % 255;
+        const uint8_t b = rand() % 255;
+        // fprintf(stderr, "(a_x, a_y) = (%d, %d)\t(b_x, b_y) = (%d, %d)\n", a_x, a_y, b_x, b_y);
+        draw_line(buffer, a_x, a_y, b_x, b_y, r, g, b);
+    }
+    fprintf(stderr, "Stress test complete.\n");
+}
+
 int main(void) {
     
     if (!initialize()) return -1;
     
-    // draw_line(pixels, 400, 400, 50, 50, 255, 0, 0);
-    
+    /*
+    // Triangle
     draw_line(pixels, 50, 50, 300, 400, 255, 0, 0);
-    puts("1");
     draw_line(pixels, 50, 50, 300, 400, 0, 255, 255);
-    puts("2");
-    
     draw_line(pixels, 50, 50, 500, 300, 0, 255, 0);
-    puts("3");
-    
     draw_line(pixels, 300, 400, 500, 300, 0, 0, 255);
-    puts("4");
-    
     draw_line(pixels, 500, 300, 300, 400, 0, 0, 255);
-    puts("5");
+    */
     
+    perform_stress_test(pixels);
     
     if (!write_image("image.ppm", pixels, WIDTH, HEIGHT)) return -1;
     
