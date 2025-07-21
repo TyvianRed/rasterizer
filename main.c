@@ -18,17 +18,19 @@ typedef struct color {
 
 color_t* pixels;
 
-bool initialize(void) {
+inline bool initialize(void) {
     pixels = malloc(WIDTH * HEIGHT * sizeof(color_t));
     return pixels ? true : false;
 }
 
-bool deallocate(void) {
-    free(pixels);
+inline bool deallocate() {
+    if (pixels) free(pixels);
     return true;
 }
 
 bool write_image(const char* name, const color_t* const buffer, const unsigned int width, const unsigned int height) {
+    
+    assert(name && buffer);
     
     FILE* const image = fopen(name, "w");
     if (!image) {
@@ -57,6 +59,7 @@ bool write_image(const char* name, const color_t* const buffer, const unsigned i
 }
 
 inline void swap_int(int* const a, int* const b) {
+    assert(a && b);
     int tmp = *a;
     *a = *b;
     *b = tmp;
@@ -95,18 +98,18 @@ void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_
         dy = ~dy + 1;
     }
     
-    const double dx_reciprocal = 1. / dx;
+    const double diff = dy * .001 / dx;
+    double y = a_y;
 
     for (double x = a_x; x <= b_x; x += .001) {
-        const double t = (x - a_x) * dx_reciprocal;
-        const int y = a_y + t * dy;
+        y += diff;
         
         if (transpose) {
-            draw_point(pixels, y, x, r, g, b);
+            draw_point(pixels, (int)y, x, r, g, b);
             continue;
         }
         
-        draw_point(pixels, x, y, r, g, b);
+        draw_point(pixels, x, (int)y, r, g, b);
     }
 }
 
