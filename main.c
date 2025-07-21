@@ -56,10 +56,20 @@ bool write_image(const char* name, const color_t* const buffer, const unsigned i
     return true;
 }
 
-void swap_int(int* const a, int* const b) {
+inline void swap_int(int* const a, int* const b) {
     int tmp = *a;
     *a = *b;
     *b = tmp;
+}
+
+inline void draw_point(color_t* const buffer, int x, int y, uint8_t r, uint8_t g, uint8_t b)
+{
+    size_t buffer_index = y * WIDTH + x;
+    assert (buffer_index < WIDTH * HEIGHT);
+    
+    buffer[buffer_index].r = r;
+    buffer[buffer_index].g = g;
+    buffer[buffer_index].b = b;
 }
 
 void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_t r, uint8_t g, uint8_t b) {
@@ -69,115 +79,34 @@ void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_
     assert(a_y >= 0 && a_y < HEIGHT);
     assert(b_y >= 0 && b_y < HEIGHT);
     
-    if (abs(a_y - b_y) > abs(a_x - b_x)) {
-        if (a_y < b_y)
-        {
-            if (a_x < b_x) {
-                for (double y = a_y; y <= b_y; y += 0.001) {
-                    double t = (y - a_y) / (b_y - a_y);
-                    int x = a_x + t * (b_x - a_x);
-                    
-                    assert((int)y * WIDTH + x < HEIGHT * WIDTH);
-                    
-                    
-                    buffer[(int)y * WIDTH + x].r = r;
-                    buffer[(int)y * WIDTH + x].g = g;
-                    buffer[(int)y * WIDTH + x].b = b;
-                }
-            }
-            else if (a_x > b_x) {
-                swap_int(&a_x, &b_x);
-                swap_int(&a_y, &b_y);
-                for (double y = a_y; y <= b_y; y += 0.001) {
-                    double t = (y - a_y) / (b_y - a_y);
-                    int x = a_x + t * (b_x - a_x);
-                    
-                   
-                    assert((int)y * WIDTH + x < HEIGHT * WIDTH);
-                    
-                    
-                    buffer[(int)y * WIDTH + x].r = r;
-                    buffer[(int)y * WIDTH + x].g = g;
-                    buffer[(int)y * WIDTH + x].b = b;
-                }
-            }
-            else if (a_x == b_x) {
-                const int x = a_x;
-                for (double y = a_y; y <= b_y; y += 0.001) {
-                    assert((int)y * WIDTH + x < HEIGHT * WIDTH);
-                    
-                    
-                    buffer[(int)y * WIDTH + x].r = r;
-                    buffer[(int)y * WIDTH + x].g = g;
-                    buffer[(int)y * WIDTH + x].b = b;
-                }
-            }
-        } else if (a_y > b_y) {
-            if (a_x < b_x) {
-                // this case is wrong.
-                // Performing test #15095...
-                // (a_x, a_y) = (151, 302) (b_x, b_y) = (402, 0)
-                for (double y = b_y; y <= a_y; y += 0.001) {
-                    double t = (y - b_y) / (a_y - b_y);
-                    int x = a_x + t * (a_x - b_x); // t < 0
-                    // fprintf(stderr, "x = %d\tt = %f\n", x, t);
-                    assert((int)y * WIDTH + x < HEIGHT * WIDTH);
-                    
-                    buffer[(int)y * WIDTH + x].r = r;
-                    buffer[(int)y * WIDTH + x].g = g;
-                    buffer[(int)y * WIDTH + x].b = b;
-                }
-            }
-            else if (a_x > b_x) {
-                swap_int(&a_x, &b_x);
-                swap_int(&a_y, &b_y);
-                for (double y = b_y; y <= a_y; y += 0.001) {
-                    double t = (y - a_y) / (a_y - b_y);
-                    int x = a_x + t * (b_x - a_x);
-                    assert((int)y * WIDTH + x < HEIGHT * WIDTH);
-                    
-                    buffer[(int)y * WIDTH + x].r = r;
-                    buffer[(int)y * WIDTH + x].g = g;
-                    buffer[(int)y * WIDTH + x].b = b;
-                }
-            }
-            else if (a_x == b_x) {
-                const int x = a_x;
-                for (double y = b_y; y <= a_y; y += 0.001) {
-                    assert((int)y * WIDTH + x < HEIGHT * WIDTH);
-                    buffer[(int)y * WIDTH + x].r = r;
-                    buffer[(int)y * WIDTH + x].g = g;
-                    buffer[(int)y * WIDTH + x].b = b;
-                }
-            }
-        }
-        
-        return;
+    int dx = b_x - a_x;
+    int dy = b_y - a_y;
+    const bool transpose = abs(dy) > abs(dx);
+    if (transpose) {
+        swap_int(&a_x, &a_y);
+        swap_int(&b_x, &b_y);
+        swap_int(&dx, &dy);
     }
     
     if (a_x > b_x) {
         swap_int(&a_x, &b_x);
         swap_int(&a_y, &b_y);
+        dx = ~dx + 1;
+        dy = ~dy + 1;
     }
     
-    // x(t) = a_x + t * (b_x - a_x);
-    // y(t) = a_y + t * (b_y - a_y);
-    // t(x) = (x - a_x) / (b_x - a_x);
-    int dx = b_x - a_x;
-    int dy = b_y - a_y;
-    // fprintf(stderr, "dx: %d\tdy: %d\n", dx, dy);
+    const double dx_reciprocal = 1. / dx;
 
     for (double x = a_x; x <= b_x; x += .001) {
-        const double t = (x - a_x) / (double)dx;
+        const double t = (x - a_x) * dx_reciprocal;
         const int y = a_y + t * dy;
         
-        const size_t buffer_index = y * WIDTH + x;
+        if (transpose) {
+            draw_point(pixels, y, x, r, g, b);
+            continue;
+        }
         
-        assert (buffer_index < WIDTH * HEIGHT);
-        
-        buffer[buffer_index].r = r;
-        buffer[buffer_index].g = g;
-        buffer[buffer_index].b = b;
+        draw_point(pixels, x, y, r, g, b);
     }
 }
 
@@ -204,16 +133,17 @@ void perform_stress_test(color_t* const buffer, size_t count) {
 int main(void) {
     
     if (!initialize()) return -1;
-    /*
+    
     // Triangle
     draw_line(pixels, 50, 50, 300, 400, 255, 0, 0);
     draw_line(pixels, 50, 50, 300, 400, 0, 255, 255);
     draw_line(pixels, 50, 50, 500, 300, 0, 255, 0);
     draw_line(pixels, 300, 400, 500, 300, 0, 0, 255);
     draw_line(pixels, 500, 300, 300, 400, 0, 0, 255);
-    */
     
     perform_stress_test(pixels, 593);
+    
+    draw_line(pixels, 50, 50, 300, 400, 255, 0, 0);
     
     if (!write_image("image.ppm", pixels, WIDTH, HEIGHT)) return -1;
     
