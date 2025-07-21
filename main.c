@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <assert.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -98,18 +99,21 @@ void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_
         dy = ~dy + 1;
     }
     
-    const double diff = dy * .001 / dx;
-    double y = a_y;
+    const double diff = fabs(dy / (double)(dx));
+    double error = 0.;
+    int y = a_y;
 
-    for (double x = a_x; x <= b_x; x += .001) {
-        y += diff;
+    for (int x = a_x; x <= b_x; ++x) {
         
-        if (transpose) {
-            draw_point(pixels, (int)y, x, r, g, b);
-            continue;
+        if (transpose) draw_point(pixels, y, x, r, g, b);
+        else draw_point(pixels, x, y, r, g, b);
+        
+        error += diff;
+        
+        if (error > .5) {
+            y += b_y > a_y ? 1 : -1;
+            --error;
         }
-        
-        draw_point(pixels, x, (int)y, r, g, b);
     }
 }
 
@@ -141,10 +145,10 @@ int main(void) {
     draw_line(pixels, 50, 50, 300, 400, 255, 0, 0);
     draw_line(pixels, 50, 50, 300, 400, 0, 255, 255);
     draw_line(pixels, 50, 50, 500, 300, 0, 255, 0);
-    draw_line(pixels, 300, 400, 500, 300, 0, 0, 255);
+    // draw_line(pixels, 300, 400, 500, 300, 0, 0, 255);
     draw_line(pixels, 500, 300, 300, 400, 0, 0, 255);
     
-    perform_stress_test(pixels, 593);
+    // perform_stress_test(pixels, 593);
     
     draw_line(pixels, 50, 50, 300, 400, 255, 0, 0);
     
