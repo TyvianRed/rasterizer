@@ -99,8 +99,10 @@ void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_
         dy = ~dy + 1;
     }
     
-    const double diff = fabs(dy / (double)(dx));
-    double error = 0.;
+    const int diff = abs(dy);
+    const int increment = b_y > a_y ? 1 : -1;
+    
+    int error = 0.;
     int y = a_y;
 
     for (int x = a_x; x <= b_x; ++x) {
@@ -110,8 +112,8 @@ void draw_line(color_t* const buffer, int a_x, int a_y, int b_x, int b_y, uint8_
         
         error += diff;
         
-        if (error > .5) {
-            y += b_y > a_y ? 1 : -1;
+        if (2 * error > dx) {
+            y += increment;
             --error;
         }
     }
