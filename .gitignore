@@ -1,3 +1,6 @@
 *.ppm
 *.exe
 *.exe
+/SocialDistancing
+*.exe
+faceExample.obj
