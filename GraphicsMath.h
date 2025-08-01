@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <iostream>
 
 typedef struct Vertex
 {
@@ -32,6 +33,7 @@ public:
     Mat4();
     inline double* operator[](size_t row);
     Mat4 operator*(Mat4& rhs) const;
+    inline void Print(std::ostream& stream) const;
     
 public:
     double Matrix[4][4];
@@ -42,3 +44,12 @@ double* Mat4::operator[](size_t row)
     return Matrix[row];
 }
 
+void Mat4::Print(std::ostream& stream) const
+{
+    stream << "[" << std::endl;
+    for (size_t row = 0; row < 4; ++row)
+    {
+        stream << "[ " << Matrix[row][0] << ", " << Matrix[row][1] << ", " << Matrix[row][2] << ", " << Matrix[row][3] << " ]" << std::endl;
+    }
+    stream << "]" << std::endl;
+}

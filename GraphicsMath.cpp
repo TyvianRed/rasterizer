@@ -28,4 +28,4 @@ Mat4 Mat4::operator*(Mat4& rhs) const
     }
     
     return newMatrix;
-}    
+}

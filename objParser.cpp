@@ -1,6 +1,7 @@
+#include "GraphicsMath.h"
 #include "ParseOBJ.h"
 
-int main()
+void testParseOBJ()
 {
     std::string fileName;
     std::cout << "OBJ File name: ";
@@ -28,7 +29,21 @@ int main()
     vertexTextureCoordinates.reserve(1024);
     
     parseOBJ(objFileStream, vertices, vertexTextureCoordinates, vertexNormals, faces);
-    
+    std::cout << "Completed parsing the OBJ model." << std::endl;
+}
+
+void testMat()
+{
+    Mat4 identity0;
+    Mat4 identity1;
+    Mat4 identitySquared = identity0 * identity1;
+    identitySquared.Print(std::cout);
+}
+
+int main()
+{
+    // testParseOBJ();
+    testMat();
 
     std::cout << "Program complete." << std::endl;
 }
