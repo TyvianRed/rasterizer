@@ -1,10 +1,15 @@
 #include "GraphicsMath.h"
 
 Mat4::Mat4()
+    : Matrix(std::make_unique<std::unique_ptr<double[]>[]>(4))
 {
     for (size_t row = 0; row < 4; ++row)
     {
-        memset(&Matrix[row], 0, sizeof(double) * 4);
+        Matrix[row] = std::make_unique<double[]>(4);
+        for (size_t column = 0; column < 4; ++column)
+        {
+            Matrix[row][column] = 0.0;
+        }
     }
     for (size_t index = 0; index < 4; ++index)
     {

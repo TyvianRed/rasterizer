@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstring>
 #include <iostream>
+#include <memory>   
 
 typedef struct Vertex
 {
@@ -31,15 +32,16 @@ class Mat4
 {
 public:
     Mat4();
-    inline double* operator[](size_t row);
+    inline std::unique_ptr<double[]>& operator[](size_t row);
     Mat4 operator*(Mat4& rhs) const;
     inline void Print(std::ostream& stream) const;
     
 public:
-    double Matrix[4][4];
+    // double Matrix[4][4];
+    std::unique_ptr<std::unique_ptr<double[]>[]> Matrix;
 };
 
-double* Mat4::operator[](size_t row)
+std::unique_ptr<double[]>& Mat4::operator[](size_t row)
 {
     return Matrix[row];
 }
